@@ -187,11 +187,7 @@ func lexer(T *ar, N *int, str string) {
 		_ = j
 		if char != ' ' {
 			if char == '(' || char == ')' {
-				if word == "" {
-					token = getToken(string(char))
-				} else {
-					token = getToken(word)
-				}
+				token = getToken(string(char))
 			} else {
 				word += string(char)
 			}
@@ -208,6 +204,7 @@ func lexer(T *ar, N *int, str string) {
 		if token != 0 {
 			T[i] = token
 			i++
+			*N = i
 			if token == -1 {
 				break
 			}
@@ -215,7 +212,6 @@ func lexer(T *ar, N *int, str string) {
 			word = ""
 		}
 	}
-	*N = i
 }
 
 func main() {
@@ -231,9 +227,6 @@ func main() {
     str := scanner.Text()
 
 	lexer(&token, &N, strings.ToLower(str))
-
-	// fmt.Println("Output: ", str[0])
-	// fmt.Println(str[0] == 'a')
 
 	fmt.Print("Output: ")
 
