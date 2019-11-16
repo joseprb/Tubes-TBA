@@ -188,6 +188,9 @@ func lexer(T *ar, N *int, str string) {
 		if char != ' ' {
 			if char == '(' || char == ')' {
 				token = getToken(string(char))
+				if (word != "") {
+					
+				}
 			} else {
 				word += string(char)
 			}
@@ -237,6 +240,7 @@ func main() {
 			fmt.Print(token[i], " ")
 		}
 	}
-	fmt.Println()
+	fmt.Println("\nPress 'Enter' to continue...")
+	bufio.NewReader(os.Stdin).ReadBytes('\n') 
 
 }
