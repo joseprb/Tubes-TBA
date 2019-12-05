@@ -1,28 +1,117 @@
 package main
 
 import (
-	"fmt"
-	"strings"
 	"bufio"
+	"fmt"
 	"os"
+	"strings"
 )
 
-type ar [99] int
+type (
+	stack []int
+	ar    [99]int
+)
 
-func state_pqrs() int {return 1}
-func state_bukakurung() int {return 9}
-func state_tutupkurung() int {return 10}
-func state_error() int {return -1}
+func (s stack) push(v int) stack {
+	return append(s, v)
+}
+
+func (s stack) pop() stack {
+	// FIXME: What do we do if the stack is empty, though?
+
+	l := len(s)
+	return s[:l-1]
+}
+
+func validate(tab ar, N int) bool {
+	stack := make(stack, 0)
+	valid := true
+	stack = stack.push(88)
+	stack = stack.push(99)
+	i := 0
+	for i < N {
+		now := tab[i]
+		// 99 = 1, 2, 6, 9
+		// 00 = 3, 4, 5, 8
+		// 88 = #
+		if i < N && now == -1 {
+			return false
+		} else if stack[len(stack)-1] == 99 {
+			stack = stack.pop()
+			if (now == 9 || now == 1 || now == 2 || now == 6) && i < N {
+				if now == 9 {
+					stack = stack.push(10)
+					stack = stack.push(99)
+				} else if now == 1 {
+					stack = stack.push(00)
+				} else if now == 6 {
+					stack = stack.push(99)
+					stack = stack.push(7)
+					stack = stack.push(99)
+				} else if now == 2 {
+					stack = stack.push(99)
+				}
+				i++
+			} else {
+				return false
+			}
+		} else if stack[len(stack)-1] == 00 {
+			stack = stack.pop()
+			if i < N {
+				if now == 3 || now == 4 || now == 5 || now == 8 {
+					stack = stack.push(99)
+					i++
+				}
+			}
+		} else if (i < N) && (stack[len(stack)-1] == now && now == 7) {
+			stack = stack.pop()
+			i++
+		} else if (i < N) && (stack[len(stack)-1] == now && now == 10) {
+			stack = stack.pop()
+			i++
+		} else {
+			return false
+		}
+	}
+
+	for stack[len(stack)-1] != 88 {
+		if stack[len(stack)-1] == 99 {
+			return false
+		}
+		stack = stack.pop()
+	}
+
+	stack = stack.pop()
+	// if not bool(stack) && valid && N {
+	if valid {
+		return true
+	} else {
+		return false
+	}
+}
+
+func state_pqrs() int        { return 1 }
+func state_bukakurung() int  { return 9 }
+func state_tutupkurung() int { return 10 }
+func state_error() int       { return -1 }
 func state_n(c string) int {
-	if c[1] == 'o' {
-		return state_no(c)
+	if len(c) > 1 {
+		if c[1] == 'o' {
+			return state_no(c)
+		} else {
+			return state_error()
+		}
 	} else {
 		return state_error()
 	}
 }
 func state_no(c string) int {
-	if c[2] == 't' {
-		return state_not(c)
+	if len(c) > 2 {
+		if c[2] == 't' {
+			return state_not(c)
+		} else {
+			return state_error()
+		}
 	} else {
 		return state_error()
 	}
@@ -35,15 +124,23 @@ func state_not(c string) int {
 	}
 }
 func state_a(c string) int {
-	if c[1] == 'n' {
-		return state_an(c)
+	if len(c) > 1 {
+		if c[1] == 'n' {
+			return state_an(c)
+		} else {
+			return state_error()
+		}
 	} else {
 		return state_error()
 	}
 }
 func state_an(c string) int {
-	if c[2] == 'd' {
-		return state_and(c)
+	if len(c) > 2 {
+		if c[2] == 'd' {
+			return state_and(c)
+		} else {
+			return state_error()
+		}
 	} else {
 		return state_error()
 	}
@@ -56,8 +153,12 @@ func state_and(c string) int {
 	}
 }
 func state_o(c string) int {
-	if c[1] == 'r' {
-		return state_or(c)
+	if len(c) > 1 {
+		if c[1] == 'r' {
+			return state_or(c)
+		} else {
+			return state_error()
+		}
 	} else {
 		return state_error()
 	}
@@ -70,15 +171,23 @@ func state_or(c string) int {
 	}
 }
 func state_x(c string) int {
-	if c[1] == 'o' {
-		return state_xo(c)
+	if len(c) > 1 {
+		if c[1] == 'o' {
+			return state_xo(c)
+		} else {
+			return state_error()
+		}
 	} else {
 		return state_error()
 	}
 }
 func state_xo(c string) int {
-	if c[2] == 'r' {
-		return state_xor(c)
+	if len(c) > 2 {
+		if c[2] == 'r' {
+			return state_xor(c)
+		} else {
+			return state_error()
+		}
 	} else {
 		return state_error()
 	}
@@ -91,8 +200,12 @@ func state_xor(c string) int {
 	}
 }
 func state_i(c string) int {
-	if c[1] == 'f' {
-		return state_if(c)
+	if len(c) > 1 {
+		if c[1] == 'f' {
+			return state_if(c)
+		} else {
+			return state_error()
+		}
 	} else {
 		return state_error()
 	}
@@ -116,22 +229,34 @@ func state_iff(c string) int {
 	}
 }
 func state_t(c string) int {
-	if c[1] == 'h' {
-		return state_th(c)
+	if len(c) > 1 {
+		if c[1] == 'h' {
+			return state_th(c)
+		} else {
+			return state_error()
+		}
 	} else {
 		return state_error()
 	}
 }
 func state_th(c string) int {
-	if c[2] == 'e' {
-		return state_the(c)
+	if len(c) > 2 {
+		if c[2] == 'e' {
+			return state_the(c)
+		} else {
+			return state_error()
+		}
 	} else {
 		return state_error()
 	}
 }
 func state_the(c string) int {
-	if c[2] == 'e' {
-		return state_then(c)
+	if len(c) > 3 {
+		if c[3] == 'n' {
+			return state_then(c)
+		} else {
+			return state_error()
+		}
 	} else {
 		return state_error()
 	}
@@ -148,7 +273,15 @@ func getToken(c string) int {
 	t := -1
 	x := rune(c[0])
 	if isProps(x) {
-		t = state_pqrs()
+		if len(c) > 1 {
+			if c[1] == '(' || c[1] == ')' {
+				t = state_pqrs()
+			} else {
+				t = state_error()
+			}
+		} else {
+			t = state_pqrs()
+		}
 	} else if x == '(' {
 		t = state_bukakurung()
 	} else if x == ')' {
@@ -165,6 +298,8 @@ func getToken(c string) int {
 		t = state_i(c)
 	} else if x == 't' {
 		t = state_t(c)
+	} else {
+		t = state_error()
 	}
 	return t
 }
@@ -179,22 +314,40 @@ func isProps(c rune) bool {
 	return false
 }
 
+func insertToken(T *ar, token *int, N *int, i *int, word *string, breaks *bool) {
+	if *token != 0 {
+		T[*i] = *token
+		*i++
+		*N = *i
+		if *token == -1 {
+			*breaks = true
+		}
+		*token = 0
+		*word = ""
+	}
+}
+
 func lexer(T *ar, N *int, str string) {
 	var token int
 	word := ""
+	breaks := false
 	i := 0
 	for j, char := range str {
 		_ = j
 		if char != ' ' {
 			if char == '(' || char == ')' {
-				token = getToken(string(char))
-				if (word != "") {
-					
+				if word != "" {
+					token = getToken(word)
+					insertToken(&(*T), &token, &(*N), &i, &word, &breaks)
+					if breaks {
+						break
+					}
 				}
+				token = getToken(string(char))
 			} else {
 				word += string(char)
 			}
-			if j + 1 == len(str) && word != "" {
+			if j+1 == len(str) && word != "" {
 				token = getToken(word)
 			}
 		} else {
@@ -204,15 +357,9 @@ func lexer(T *ar, N *int, str string) {
 				continue
 			}
 		}
-		if token != 0 {
-			T[i] = token
-			i++
-			*N = i
-			if token == -1 {
-				break
-			}
-			token = 0
-			word = ""
+		insertToken(&(*T), &token, &(*N), &i, &word, &breaks)
+		if breaks {
+			break
 		}
 	}
 }
@@ -221,13 +368,13 @@ func main() {
 
 	var (
 		token ar
-		N int
+		N     int
 	)
 
 	fmt.Print("Input : ")
 	scanner := bufio.NewScanner(os.Stdin)
-    scanner.Scan()
-    str := scanner.Text()
+	scanner.Scan()
+	str := scanner.Text()
 
 	lexer(&token, &N, strings.ToLower(str))
 
@@ -240,7 +387,13 @@ func main() {
 			fmt.Print(token[i], " ")
 		}
 	}
-	fmt.Println("\nPress 'Enter' to continue...")
-	bufio.NewReader(os.Stdin).ReadBytes('\n') 
+	fmt.Println()
+	if validate(token, N) {
+		fmt.Println("VALID")
+	} else {
+		fmt.Println("TIDAK VALID")
+	}
+	// fmt.Println("\nPress 'Enter' to continue...")
+	// bufio.NewReader(os.Stdin).ReadBytes('\n')
 
 }
